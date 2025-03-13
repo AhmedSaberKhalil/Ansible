@@ -1,0 +1,19 @@
+- name: Install Nginx
+  apt:
+    name: "{{ ubuntu_packages_list }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: "ubuntu start {{ nginx_svc }} service"
+  service:
+    name: "{{ nginx_svc }}"
+    state: started
+    enabled: yes
+
+- name: add custom root page
+  template:
+    src: index.html.j2
+    dest: "{{ ubuntu_nginx_html_dest }}/index.html" 
+    mode: 0644
+  notify: restart nginx svc

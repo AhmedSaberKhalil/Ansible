@@ -1,0 +1,19 @@
+---
+- name: "rhel: Install nginx"
+  yum:
+    name: "{{ rhel_packages_list }}"
+    state: present
+
+- name: "rhel: Start {{ nginx_svc }} service"
+  service:
+    name: "{{ nginx_svc }}"
+    state: started
+    enabled: true
+
+
+- name: "rhel: Add custom root page"
+  template:
+    src: index.html.j2
+    dest: "{{ rhel_nginx_html_dest + '/index.html' }}"
+    mode: 0644
+  notify: restart nginx svc

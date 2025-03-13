@@ -1,0 +1,9 @@
+---
+- name: playbook to install nginx on ubuntu and redhat ec2
+  hosts: webserver_hosts
+  gather_facts: yes
+  vars:
+    - username: ahmed khalil
+  roles:
+    - nginx-server
+

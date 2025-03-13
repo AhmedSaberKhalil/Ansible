@@ -1,0 +1,27 @@
+#---
+# tasks file for roles/apache-server
+#- include_tasks: ubuntu-tasks.yml
+---
+- name: Validate Linux distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.distribution in ['Ubuntu', 'RedHat']
+    fail_msg: "[ERROR] validation error: unsupported Linux distribution"
+    success_msg: "[DONE] inputs validation"
+
+- block:
+    - name: Load variables
+      include_vars: "{{ ansible_facts.distribution | lower }}.yml"
+
+    - name: "[Ubuntu] distribution tasks"
+      include_tasks: ubuntu-tasks.yml
+      when: ansible_facts.distribution == 'Ubuntu'
+
+    - name: "[RedHat] distribution tasks"
+      include_tasks: redhat-based-tasks.yml
+      when: ansible_facts.distribution == 'RedHat'
+
+  rescue:
+    - name: Print failure message
+      debug:
+        msg: "[ERROR] something went wrong. Maybe it was a connection issue. Try to rerun the playbook. If the problem persists, contact the role developer."
