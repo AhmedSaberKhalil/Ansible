@@ -1,5 +1,5 @@
 ---
-- name: playbook to install nginx on ubuntu and redhat ec2
+- name: playbook to install docker and open-jdk on ubuntu and nginx on redhat ec2
   hosts: webserver_hosts
   gather_facts: yes
   vars:
