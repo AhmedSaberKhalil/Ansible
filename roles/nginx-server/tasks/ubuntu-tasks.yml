@@ -1,19 +1,49 @@
-- name: Install Nginx
+---
+- name: Update apt cache
   apt:
-    name: "{{ ubuntu_packages_list }}"
+    update_cache: yes
+
+- name: Create Jenkins home directory
+  file:
+    path: "{{ jenkins_home }}"
+    state: directory
+    mode: '0777'
+
+- name: Install OpenJDK
+  apt:
+    name: "{{ openjdk_version }}"
+    state: present
+
+- name: Install required packages for Docker
+  apt:
+    name: "{{ docker_required_packages }}"
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: "{{ docker_gpg_url }}"
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] {{ docker_repo_url }} {{ ansible_distribution_release }} stable"
+    state: present
+
+- name: Install Docker
+  apt:
+    name: "{{ docker_package }}"
     state: present
     update_cache: yes
-    cache_valid_time: 3600
 
-- name: "ubuntu start {{ nginx_svc }} service"
-  service:
-    name: "{{ nginx_svc }}"
-    state: started
-    enabled: yes
+- name: Create Jenkins user
+  user:
+    name: jenkins
+    shell: /bin/bash
+    home: /home/jenkins
+    create_home: yes
 
-- name: add custom root page
-  template:
-    src: index.html.j2
-    dest: "{{ ubuntu_nginx_html_dest }}/index.html" 
-    mode: 0644
-  notify: restart nginx svc
+- name: Add Jenkins user to Docker group
+  user:
+    name: jenkins
+    groups: docker
+    append: yes
