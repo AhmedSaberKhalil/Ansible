@@ -1,0 +1,187 @@
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install OpenJDK
+  apt:
+    name: "{{ openjdk_version }}"
+    state: present
+
+
+- name: Install Jenkins dependencies
+  apt:
+    name:
+      - wget
+      - gnupg
+      - ca-certificates
+    state: present
+    update_cache: yes
+
+- name: Add Jenkins key to keyrings directory
+  shell: |
+    wget -q -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+  args:
+    executable: /bin/bash
+
+- name: Add Jenkins repository securely
+  copy:
+    dest: /etc/apt/sources.list.d/jenkins.list
+    content: |
+      deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Update apt cache after adding Jenkins repo
+  apt:
+    update_cache: yes
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+
+
+- name: Grant Jenkins user passwordless sudo access
+  copy:
+    dest: /etc/sudoers.d/jenkins
+    content: "jenkins ALL=(ALL) NOPASSWD: ALL\n"
+    owner: root
+    group: root
+    mode: '0440'
+
+- name: Check current user under Jenkins
+  shell: sudo -u jenkins whoami
+  register: jenkins_user
+  changed_when: false
+
+- name: Show which user is running
+  debug:
+    msg: "Current user is {{ jenkins_user.stdout }}"
+  
+  
+- name: Install required packages for Docker
+  apt:
+    name: "{{ docker_required_packages }}"
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: "{{ docker_gpg_url }}"
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] {{ docker_repo_url }} {{ ansible_distribution_release }} stable"
+    state: present
+
+- name: Install Docker
+  apt:
+    name: "{{ docker_package }}"
+    state: present
+    update_cache: yes
+
+- name: Add Jenkins user to Docker group
+  user:
+    name: jenkins
+    groups: docker
+    append: yes
+
+- name: Ensure Docker service is running
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+   
+
+- name: Install dependencies for AWS CLI
+  apt:
+    name:
+      - unzip
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Download AWS CLI v2
+  get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: '0644'
+
+- name: Unzip AWS CLI package
+  unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp/
+    remote_src: yes
+
+- name: Install AWS CLI
+  command: /tmp/aws/install --update
+  args:
+    creates: /usr/local/bin/aws
+
+- name: Verify AWS CLI installation
+  command: aws --version
+  register: aws_version
+
+- debug:
+    msg: "{{ aws_version.stdout }}"
+
+- name: Get latest stable kubectl version
+  shell: curl -L -s https://dl.k8s.io/release/stable.txt
+  register: kubectl_version
+  changed_when: false
+
+- name: Download kubectl binary
+  get_url:
+    url: "https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+
+- name: Verify kubectl installation
+  command: kubectl version --client
+  register: kubectl_version_output
+  changed_when: false
+
+- debug:
+    msg: "kubectl version: {{ kubectl_version_output.stdout }}"
+
+- name: Download latest eksctl release
+  get_url:
+    url: https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz
+    dest: /tmp/eksctl.tar.gz
+    mode: '0644'
+
+- name: Extract eksctl binary
+  unarchive:
+    src: /tmp/eksctl.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Move eksctl to /usr/local/bin
+  command: mv /tmp/eksctl /usr/local/bin/eksctl
+  args:
+    creates: /usr/local/bin/eksctl
+
+- name: Make eksctl executable
+  file:
+    path: /usr/local/bin/eksctl
+    mode: '0755'
+
+- name: Verify eksctl installation
+  command: eksctl version
+  register: eksctl_version_output
+  changed_when: false
+
+- debug:
+    msg: "eksctl version: {{ eksctl_version_output.stdout }}"
+
+- name: Check current user
+  command: whoami
+  register: current_user
+
+- name: Show current user
+  debug:
+    msg: "Current user is {{ current_user.stdout }}"
+
+

@@ -1,5 +1,4 @@
 openjdk_version: openjdk-17-jdk
-jenkins_home: /home/ubuntu/jenkins_home
 docker_package: docker-ce
 docker_gpg_url: https://download.docker.com/linux/ubuntu/gpg
 docker_repo_url: https://download.docker.com/linux/ubuntu

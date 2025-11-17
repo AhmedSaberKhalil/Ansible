@@ -1,4 +1,0 @@
----
-rhel_packages_list:
-  - nginx
-rhel_nginx_html_dest: /usr/share/nginx/html

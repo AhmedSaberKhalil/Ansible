@@ -1,9 +1,8 @@
 ---
-- name: playbook to install docker and open-jdk on ubuntu and nginx on redhat ec2
+- name: playbook to install  open-jdk, docker, jenkins, aws cli and eksctl on ubuntu
   hosts: webserver_hosts
   gather_facts: yes
-  vars:
-    - username: ahmed khalil
+
   roles:
-    - nginx-server
+    - ci-cd-pipeline
 

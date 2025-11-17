@@ -1,3 +1,0 @@
----
-# vars file for roles/apache-server
-nginx_svc: nginx
