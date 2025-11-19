@@ -8,3 +8,4 @@ docker_required_packages:
 - curl
 - gnupg
 - software-properties-common
+ebs_csi_role_arn: "arn:aws:iam::your arn:role/AmazonEKS_EBS_CSI_Driver_Role"
