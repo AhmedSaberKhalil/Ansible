@@ -184,4 +184,25 @@
   debug:
     msg: "Current user is {{ current_user.stdout }}"
 
+- name: Reboot the Ubuntu system
+  ansible.builtin.reboot:
+    msg: "System reboot initiated by Ansible"
+    reboot_timeout: 60
+
+- name: Create EKS cluster
+  shell: |
+    eksctl create cluster \
+      --name test-cluster \
+      --version 1.32 \
+      --region eu-north-1 \
+      --nodegroup-name worker-nodes \
+      --node-type t3.small \
+      --nodes 2
+  become: no
+  remote_user: jenkins
+  environment:
+    AWS_SHARED_CREDENTIALS_FILE: /var/lib/jenkins/.aws/credentials
+    AWS_REGION: eu-north-1
+  register: eks_cluster_creation
+  ignore_errors: no
 
