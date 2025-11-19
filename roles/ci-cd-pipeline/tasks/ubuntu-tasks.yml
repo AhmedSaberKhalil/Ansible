@@ -206,3 +206,28 @@
   register: eks_cluster_creation
   ignore_errors: no
 
+
+- name: Associate IAM OIDC provider
+  shell: eksctl utils associate-iam-oidc-provider --cluster test-cluster --approve --region eu-north-1
+
+- name: Create IAM service account for EBS CSI driver
+  shell: |
+    eksctl create iamserviceaccount \
+      --name ebs-csi-controller-sa \
+      --namespace kube-system \
+      --cluster test-cluster \
+      --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
+      --approve \
+      --role-only \
+      --role-name AmazonEKS_EBS_CSI_Driver_Role \
+      --region eu-north-1
+
+- name: Create EBS CSI Driver addon
+  shell: |
+    eksctl create addon \
+      --name aws-ebs-csi-driver \
+      --cluster test-cluster \
+      --service-account-role-arn {{ ebs_csi_role_arn }} \
+      --region eu-north-1 \
+      --force
+
